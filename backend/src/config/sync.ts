@@ -1,12 +1,9 @@
-// src/db/sequelize.ts
-import { Sequelize } from 'sequelize-typescript';
-import { User } from '../models/userModel';
-
-
+import { Sequelize } from "sequelize-typescript";
+import { User } from "../models/userModel";
 
 export const sequelize = new Sequelize({
   database: process.env.PG_DATABASE,
-  dialect: 'postgres',
+  dialect: "postgres",
   username: process.env.PG_USER,
   password: process.env.PG_PASSWORD,
   host: process.env.PG_HOST,

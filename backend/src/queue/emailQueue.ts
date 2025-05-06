@@ -1,20 +1,21 @@
-// src/queues/emailQueue.ts
-import Queue  from "bull";
-import Redis from "ioredis";
+import Queue from "bull";
 import { sendVerificationEmail } from "../mailConfig/emails";
-// import { sendVerificationEmail } from "../utils/sendVerificationEmail";
 
-const redisOptions = {
+export const emailQueue = new Queue("emailQueue", {
   redis: {
-    host: process.env.REDIS_HOST || "127.0.0.1",
-    port: Number(process.env.REDIS_PORT) || 6379,
+    host: process.env.REDIS_HOST,
+    port: Number(process.env.REDIS_PORT),
   },
-};
+});
 
-export const emailQueue = new Queue("emailQueue", redisOptions);
-
-// Process the queue
-emailQueue.process(async (job:any) => {
+emailQueue.process(async (job) => {
   const { email, name, token } = job.data;
-  await sendVerificationEmail(email, name, token);
+
+  try {
+    await sendVerificationEmail(email, name, token);
+    return Promise.resolve();
+  } catch (err) {
+    console.error("❌ Verification email failed:", err);
+    return Promise.reject(err);
+  }
 });
