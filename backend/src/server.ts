@@ -39,6 +39,12 @@ createBullBoard({
 serverAdapter.setBasePath("/admin/queues");
 app.use("/admin/queues", serverAdapter.getRouter());
 
+
+// app.get("/api/config/google", (_req:any, res:any) => {
+//   res.send({ clientId: process.env.GOOGLE_CLIENT_ID
+//   });
+// });
+
 // Start Server
 (async () => {
   try {

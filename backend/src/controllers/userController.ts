@@ -8,7 +8,9 @@ import { welcomeEmailQueue } from "../queue/welcomeEmailQueue";
 import crypto from "crypto";
 import { passwordResetQueue } from "../queue/passwordResetQueue";
 import { resetSuccessQueue } from "../queue/resetSuccessQueue";
-import bcrypt from "bcryptjs";
+import { OAuth2Client } from "google-auth-library";
+
+const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 export class UserController {
   //    Create a new user
@@ -268,6 +270,177 @@ export class UserController {
         success: false,
         message: err.message || "Server error",
       });
+    }
+  }
+
+  // Get all users
+  async getAllUsers(req: Request, res: Response): Promise<void> {
+    try {
+      // Fetch all users from the database
+      const users = await User.findAll({
+        attributes: ["id", "email", "name", "is_admin"],
+      });
+
+      if (!users || users.length === 0) {
+        res.status(404).json({ success: false, message: "No users found" });
+        return;
+      }
+
+      res.status(200).json({
+        success: true,
+        users,
+      });
+    } catch (error: any) {
+      console.error("Error fetching users:", error);
+      res
+        .status(500)
+        .json({ success: false, message: error.message || "Server error" });
+    }
+  }
+
+  // Delete user by ID
+  async deleteUserById(req: Request, res: Response): Promise<void> {
+    const { id } = req.params;
+
+    try {
+      // Find the user by ID
+      const user = await User.findByPk(id);
+
+      if (!user) {
+        res.status(404).json({ success: false, message: "User not found" });
+        return;
+      }
+
+      // Delete the user
+      await user.destroy();
+
+      res.status(200).json({
+        success: true,
+        message: "User deleted successfully",
+      });
+    } catch (error: any) {
+      console.error("Error deleting user:", error);
+      res
+        .status(500)
+        .json({ success: false, message: error.message || "Server error" });
+    }
+  }
+
+  // Get user by ID
+  async getUserById(req: Request, res: Response): Promise<void> {
+    const { id } = req.params;
+
+    try {
+      // Find the user by ID
+      const user = await User.findByPk(id);
+
+      if (!user) {
+        res.status(404).json({ success: false, message: "User not found" });
+        return;
+      }
+
+      res.status(200).json({
+        success: true,
+        user: {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+          is_verified: user.is_verified,
+          is_admin: user.is_admin,
+        },
+      });
+    } catch (error: any) {
+      console.error("Error getting user:", error);
+      res
+        .status(500)
+        .json({ success: false, message: error.message || "Server error" });
+    }
+  }
+
+  // Update user by ID
+  async updateUserById(req: Request, res: Response): Promise<void> {
+    const { id } = req.params;
+    const { email, name } = req.body;
+
+    try {
+      // Find the user by ID
+      const user = await User.findByPk(id);
+
+      if (!user) {
+        res.status(404).json({ success: false, message: "User not found" });
+        return;
+      }
+
+      // Update user properties with provided data
+      if (email) user.email = email;
+      if (name) user.name = name;
+
+      // Save the updated user data
+      await user.save();
+
+      res.status(200).json({
+        success: true,
+        message: "User updated successfully",
+        user: {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+          is_verified: user.is_verified,
+          is_admin: user.is_admin,
+        },
+      });
+    } catch (error: any) {
+      console.error("Error updating user:", error);
+      res
+        .status(500)
+        .json({ success: false, message: error.message || "Server error" });
+    }
+  }
+
+  async googleLogin(req: Request, res: Response): Promise<void> {
+    const { idToken } = req.body;
+
+    try {
+      const ticket = await client.verifyIdToken({
+        idToken,
+        audience: process.env.GOOGLE_CLIENT_ID,
+      });
+
+      const payload = ticket.getPayload();
+      if (!payload) {
+        res.status(401).json({ message: "Invalid token" });
+        return;
+      }
+
+      const { email, name } = payload;
+
+      let user = await User.findOne({ where: { email } });
+
+      if (!user) {
+        // Create user if not exist
+        user = await User.create({
+          email,
+          name,
+          is_verified: true,
+        } as any);
+      }
+
+      // Generate JWT and set cookie
+      generateToken(res, user.id);
+
+      res.status(200).json({
+        success: true,
+        message: "Google login successful",
+        user: {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+          is_verified: user.is_verified,
+        },
+      });
+    } catch (error) {
+      console.error("Google login error:", error);
+      res.status(500).json({ message: "Google login failed" });
     }
   }
 }
