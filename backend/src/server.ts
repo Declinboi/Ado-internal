@@ -7,6 +7,7 @@ import { ExpressAdapter } from "@bull-board/express";
 import { createBullBoard } from "@bull-board/api";
 import { BullAdapter } from "@bull-board/api/bullAdapter";
 import helmet from "helmet";
+import cors from "cors"
 import redis from "./config/redis";
 import { emailQueue } from "./queue/emailQueue";
 import { welcomeEmailQueue } from "./queue/welcomeEmailQueue";
@@ -17,6 +18,10 @@ const app = express();
 const PORT = process.env.PORT;
 
 // Middleware
+app.use(cors({
+  origin: 'http://localhost:5173',
+  credentials: true,
+}))
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
@@ -40,10 +45,10 @@ serverAdapter.setBasePath("/admin/queues");
 app.use("/admin/queues", serverAdapter.getRouter());
 
 
-// app.get("/api/config/google", (_req:any, res:any) => {
-//   res.send({ clientId: process.env.GOOGLE_CLIENT_ID
-//   });
-// });
+app.get("/api/config/google", (_req:any, res:any) => {
+  res.send({ clientId: process.env.GOOGLE_CLIENT_ID
+  });
+});
 
 // Start Server
 (async () => {
