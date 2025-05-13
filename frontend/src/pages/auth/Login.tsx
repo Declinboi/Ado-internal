@@ -1,9 +1,49 @@
-import React from "react";
-import { Link } from "react-router-dom";
+import React, { useEffect, useState } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import GoogleLoginButton from "./GoogleLogin";
 import GoogleAuthWrapper from "../../components/GoogleWrapper";
+import { useLoginMutation } from "../../redux/api/userApiSlice";
+import { useDispatch, useSelector } from "react-redux";
+import type { RootState } from "../../redux/features/store";
+import { setCredentials } from "../../redux/features/authSlice";
+import { toast } from "react-toastify";
+import Input from "../../components/Input";
+import { Loader, Lock, Mail } from "lucide-react";
 
 const Login = () => {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+
+  const [login, { isLoading }] = useLoginMutation();
+
+  const userInfo = useSelector((state: RootState) => state.auth.userInfo);
+
+  const { search } = useLocation();
+  const sp = new URLSearchParams(search);
+  const redirect = sp.get("redirect") || "/";
+
+  useEffect(() => {
+    if (userInfo) {
+      navigate(redirect);
+    }
+  }, [navigate, redirect, userInfo]);
+
+  const submitHandler = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    try {
+      const res = await login({ email, password }).unwrap();
+      console.log(res);
+      dispatch(setCredentials(res));
+      navigate(redirect);
+      toast.success("User successfully login");
+    } catch (err: any) {
+      toast.error(err?.data?.message || err.message || "Something went wrong");
+    }
+  };
+
   return (
     <div className="min-h-screen bg-white flex items-center justify-center px-4 py-12">
       <div className="w-full max-w-md space-y-6 border p-8 rounded-xl shadow-md">
@@ -13,39 +53,36 @@ const Login = () => {
         </h2>
 
         {/* Login Form */}
-        <form className="space-y-5">
-          {/* Email Field */}
-          <div>
-            <label htmlFor="email" className="block text-black font-medium">
-              Email address
-            </label>
-            <input
-              id="email"
-              type="email"
-              required
-              className="mt-1 w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500"
-            />
-          </div>
+        <form onSubmit={submitHandler} className="space-y-5">
+          <Input
+            label="Email address"
+            icon={Mail}
+            placeholder="enter your email"
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
 
-          {/* Password Field */}
-          <div>
-            <label htmlFor="password" className="block text-black font-medium">
-              Password
-            </label>
-            <input
-              id="password"
-              type="password"
-              required
-              className="mt-1 w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500"
-            />
-          </div>
+          <Input
+            label="Password"
+            icon={Lock}
+            placeholder="enter your password"
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
 
           {/* Login Button */}
           <button
             type="submit"
+            disabled={isLoading}
             className="w-full bg-yellow-400 text-black font-semibold py-2 px-4 rounded-md hover:bg-yellow-500 transition"
           >
-            Login
+            {isLoading ? (
+              <Loader className="animate-spin h-8 w-10 text-center text-green-800" />
+            ) : (
+              "Login"
+            )}
           </button>
         </form>
 

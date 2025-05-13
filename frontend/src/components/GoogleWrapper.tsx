@@ -14,7 +14,7 @@ const GoogleAuthWrapper: React.FC<Props> = ({ children }) => {
   if (isLoading) {
     return (
       <div>
-        <Loader className="animate-spin h-8 w-10" />
+        <Loader className="h-8 w-10 text-green-800 animate-bounce " />
       </div>
     );
   }

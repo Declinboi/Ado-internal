@@ -23,6 +23,14 @@ export const userApiSlice = apiSlice.injectEndpoints({
         method: "POST",
       }),
     }),
+    verifyEmail: builder.mutation({
+      query: (code) => ({
+        url: `${USERS_URL}/verify-email`,
+        method: "POST",
+        body: code,
+      }),
+    }),
+
     getUsers: builder.query<any, void>({
       query: () => ({
         url: USERS_URL,
@@ -61,7 +69,7 @@ export const userApiSlice = apiSlice.injectEndpoints({
       query: ({ token, newPassword }) => ({
         url: `${USERS_URL}/reset-password/${token}`,
         method: "POST",
-        body: { newPassword },
+        body: {password: newPassword },
       }),
     }),
     googleLogin: builder.mutation<any, { idToken: string }>({
@@ -92,5 +100,6 @@ export const {
   useForgottenPasswordMutation,
   useResetPasswordMutation,
   useGoogleLoginMutation,
-  useGetClientIdQuery
+  useGetClientIdQuery,
+  useVerifyEmailMutation
 } = userApiSlice;

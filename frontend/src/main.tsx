@@ -11,9 +11,9 @@ import Home from "./Home.tsx";
 import Login from "./pages/auth/Login.tsx";
 import Register from "./pages/auth/Register.tsx";
 import VerifyEmail from "./pages/auth/VerifyEmail.tsx";
-
-
-
+import ForgottenPassword from "./pages/auth/ForgottenPassword.tsx";
+import CheckEmail from "./pages/auth/CheckEmail.tsx";
+import ResetPassword from "./pages/auth/ResetPassword.tsx";
 
 function AppRouter() {
   const router = createBrowserRouter([
@@ -25,15 +25,39 @@ function AppRouter() {
           index: true,
           element: <Home />,
         },
+
+        {
+          path: "/login",
+          element: <Login />,
+        },
+
+        {
+          path: "/Register",
+          element: <Register />,
+        },
         {
           path: "/verify-email",
           element: <VerifyEmail />,
         },
+
+        {
+          path: "/forgotten-password",
+          element: <ForgottenPassword />,
+        },
+
+        {
+          path: "/check-email",
+          element: <CheckEmail />,
+        },
+
+        {
+          path: "/reset-password/:token",
+          element: <ResetPassword/>,
+        },
+
         {
           element: <PrivateRoute />,
           children: [
-            // Protected routes in a wrapper
-
             // { path: "/profile", element: <Profile /> },
             // { path: "/shipping", element: <Shipping /> },
             // { path: "/placeorder", element: <PlaceOrder /> },
@@ -53,16 +77,6 @@ function AppRouter() {
             // { path: "/orderlist", element: <OrderList /> },
             // { path: "/admin-dashboard", element: <AdminDashboard /> },
           ],
-        },
-
-        {
-          path: "/login",
-          element: <Login />,
-        },
-
-        {
-          path: "/Register",
-          element: <Register />,
         },
       ],
     },
